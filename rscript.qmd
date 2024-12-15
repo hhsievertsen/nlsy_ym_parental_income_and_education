@@ -64,7 +64,7 @@ ggplot(result, aes(x = x_family_income, y = avg_schooling)) +
   )
 
   
-ggsave("fig_income_inequality.png",bg="white")
+ggsave("fig_income_inequality.png",bg="white", width = 8, height = 6)
 ```
 
 The `echo: false` option disables the printing of code (only output is displayed).
