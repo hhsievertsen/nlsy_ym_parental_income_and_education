@@ -1,0 +1,70 @@
+---
+title: "parental_income_and_education"
+format: html
+editor: visual
+---
+
+Read data
+
+```{r}
+library(data.table)
+
+df<-setDT(readstata13::read.dta13("/Users/hhs/Dropbox/Work/Research/Projects/Minimum Wages/data/tempdata/analysisdata.dta"))
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+ggplot
+
+```{r}
+library(ggplot2)
+library(ggpattern)
+chartdata= df[!x_family_income %in% c(0),]
+result <- chartdata[, .(avg_schooling = weighted.mean(y_schooling_1981,x_weight_1966, na.rm = TRUE)), by = x_family_income]
+
+
+
+highlight_data <- result[x_family_income %in% range(x_family_income)]
+
+
+ggplot(result, aes(x = x_family_income, y = avg_schooling)) + 
+  geom_col_pattern(
+    fill = 'grey50',
+    colour = "black",
+    pattern = "stripe",
+    pattern_density = 0.5,
+    pattern_fill = 'grey60',
+    pattern_colour = NA
+  ) +
+  geom_text(
+    data = highlight_data,  # Use only the rows with min and max x_family_income
+       aes(label = paste0(sprintf("%.1f", avg_schooling), "y")),  # Format to 1 decimal and append "y"
+    vjust = -0.5,  # Adjust vertical position
+    color = "black",
+    size = 3
+  ) +
+  labs(
+    linetype = "",
+    x = "\nParental income in 1966",
+    y = " ",
+    caption="\nSource: NLSY YM, 14-24y in 1966, measured in 1981.",
+    title = "  Years of\n schooling"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = -0.08, size = 10, color = "grey30"),
+    plot.margin = rep(grid::unit(0.15, "in"), 4),
+    axis.title = element_text(hjust = 0.5, size = 11, color = "grey30"),
+    plot.caption =  element_text(hjust = 0, size = 8, color = "grey30"),
+  ) +
+  scale_x_continuous(
+    breaks = c(1, 3, 5, 7, 9, 11),  # Custom tick positions
+    labels = c("< $1,000", "$2-2,999", "$4-4,999",
+               "$6-6,999", "$10-10,999", ">= $25,000")  # Custom labels
+  )
+
+  
+ggsave("fig_income_inequality.png",bg="white")
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
