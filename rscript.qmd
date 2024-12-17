@@ -9,7 +9,7 @@ Read data
 ```{r}
 library(data.table)
 
-df<-setDT(readstata13::read.dta13("/Users/hhs/Dropbox/Work/Research/Projects/Minimum Wages/data/tempdata/analysisdata.dta"))
+df<-setDT(readstata13::read.dta13("C:\\Users\\B059633\\Dropbox\\Work\\Research\\Projects\\Minimum Wages\\data\\tempdata\\analysisdata.dta"))
 ```
 
 The `echo: false` option disables the printing of code (only output is displayed).
@@ -64,7 +64,125 @@ ggplot(result, aes(x = x_family_income, y = avg_schooling)) +
   )
 
   
-ggsave("fig_income_inequality.png",bg="white", width = 8, height = 6)
+ggsave("fig_income_inequality.png",bg="white")
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+
+Age 
+```{r}
+library(ggplot2)
+library(ggpattern)
+
+dt_counts <- df[, .N, by = x_age]
+dt_counts[, percent := (N / sum(N)) * 100]
+
+ggplot(dt_counts, aes(x = factor(x_age), y = percent))+ 
+  geom_col_pattern(
+    fill = 'grey50',
+    colour = "black",
+    pattern = "stripe",
+    pattern_density = 0.5,
+    pattern_fill = 'grey60',
+    pattern_colour = NA
+  )+
+  labs(
+    linetype = "",
+    x = "\n Age in 1966",
+    y = " ",
+    caption="\nSource: NLSY YM, 14-24y in 1966.",
+    title = " Percent"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = -0.08, size = 10, color = "grey30"),
+    plot.margin = rep(grid::unit(0.15, "in"), 4),
+    axis.title = element_text(hjust = 0.5, size = 11, color = "grey30"),
+    plot.caption =  element_text(hjust = 0, size = 8, color = "grey30"),
+  ) +
+  geom_vline(xintercept=5.5)
+
+  
+ggsave("fig_age_distribution.png",bg="white")
+```
+
+
+
+
+Treated 
+```{r}
+library(ggplot2)
+library(ggpattern)
+library(scales)
+
+ddt_counts <- df[, .N, by = .(t_treated_industry, x_black)]
+
+ddt_counts <- ddt_counts[x_black %in% c(1,0)]
+
+ddt_counts <- ddt_counts[t_treated_industry %in% c(1,0)]
+ddt_counts[, percent := N / sum(N), by = x_black]
+
+
+ggplot(ddt_counts, aes(x = as.factor(x_black), y = percent, fill =as.factor(t_treated_industry) ))+ 
+  geom_col(position = "dodge")+
+  labs(
+    linetype = "",
+    x = "Blacks",
+    y = " ",
+    fill="Treated by FLSA 1966 ",
+    caption="\nSource: NLSY YM.",
+    title = " Percent"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = -0.08, size = 10, color = "grey30"),
+    plot.margin = rep(grid::unit(0.15, "in"), 4),
+    axis.title = element_text(hjust = 0.5, size = 11, color = "grey30"),
+    plot.caption =  element_text(hjust = 0, size = 8, color = "grey30"),
+  legend.position=c(0.9,0.9)) +
+   scale_y_continuous(labels = percent_format()) +
+   scale_fill_manual(values = c("grey20",  "grey80")) 
+ggsave("fig_industry.png",bg="white")
+```
+
+
+
+Heterogeneity
+
+```{r}
+library("tidyverse")
+a<-tibble(outcome=c(rep("Years of schooling",6),rep("College",6),rep("Dropout",6)),
+          group=c(rep(c("Blacks","Whites","South","Non-South","Urban","Rural"),3)),
+          beta= c(0.920, 0.461,0.938,0.255,0.510,0.711,
+                   0.044,0.075,0.062,0.080,0.090,0.056,
+               -0.102,0.063,-0.160,-0.001,-0.025,-0.128),
+          se=c(0.380,0.237,0.290,0.201,0.280,0.231,
+0.055,0.042,0.053,0.030,0.045,0.042,
+0.047,0.026,0.047,0.033,0.043,0.044))
+
+a<-mutate(a,
+          lower90=beta-1.64*se,upper90=beta+1.64*se,
+          lower95=beta-1.96*se,upper95=beta+1.96*se,
+          groupF=factor(group,levels=c("Blacks","Whites","South","Non-South","Urban","Rural")))
+
+fig1<-ggplot(a%>%filter(outcome=="Years of schooling"),aes(x=groupF,y=beta))+
+  geom_point()+
+  ylim(-0.5,2)+
+  geom_linerange(mapping=aes(ymax=upper95,ymin =lower95))+
+  coord_flip()
+
+fig2<-ggplot(a%>%filter(outcome=="College"),aes(x=groupF,y=beta))+
+  geom_point()+
+  geom_linerange(mapping=aes(ymax=upper95,ymin =lower95))+
+  coord_flip()
+
+fig3<-ggplot(a%>%filter(outcome=="Dropout"),aes(x=groupF,y=beta))+
+  geom_point()+
+  geom_linerange(mapping=aes(ymax=upper95,ymin =lower95))+
+  coord_flip()
+
+library("patchwork")
+fig1+fig2+fig3
+
+```
+
+
