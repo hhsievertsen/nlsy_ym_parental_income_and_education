@@ -67,8 +67,8 @@ ggplot(result, aes(x = x_family_income, y = avg_schooling)) +
 ggsave("fig_income_inequality.png",bg="white")
 ```
 
+Age
 
-Age 
 ```{r}
 library(ggplot2)
 library(ggpattern)
@@ -105,10 +105,8 @@ ggplot(dt_counts, aes(x = factor(x_age), y = percent))+
 ggsave("fig_age_distribution.png",bg="white")
 ```
 
+Treated
 
-
-
-Treated 
 ```{r}
 library(ggplot2)
 library(ggpattern)
@@ -143,8 +141,6 @@ ggplot(ddt_counts, aes(x = as.factor(x_black), y = percent, fill =as.factor(t_tr
    scale_fill_manual(values = c("grey20",  "grey80")) 
 ggsave("fig_industry.png",bg="white")
 ```
-
-
 
 Heterogeneity
 
@@ -184,5 +180,3 @@ library("patchwork")
 fig1+fig2+fig3
 
 ```
-
-
